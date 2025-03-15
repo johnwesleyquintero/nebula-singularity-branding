@@ -15,10 +15,15 @@
   "license": "ISC",
   "devDependencies": {
     "@types/node": "^22.13.10",
+    "@types/glob": "^11.0.5",
+    "@types/inquirer": "^12.5.1",
+    "@types/minimatch": "^5.1.2",
+    "@types/fs-extra": "^11.0.3",
     "fs-extra": "^11.3.0",
     "glob": "^11.0.1",
     "inquirer": "^12.5.0",
     "minimatch": "^10.0.1",
-    "ts-node": "^10.9.2"
+    "ts-node": "^10.9.2",
+    "typescript": "^5.4.5"
   }
 }

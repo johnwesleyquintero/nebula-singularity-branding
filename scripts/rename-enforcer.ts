@@ -1,43 +1,43 @@
 #!/usr/bin/env node
-const { readdir, readFile, writeFile, rename, stat } = require('fs-extra');
-const { join, parse, basename } = require('path');
-const { prompt } = require('inquirer');
+const fs = require('fs-extra');
+const path = require('path');
+const inquirer = require('inquirer');
 const { glob } = require('glob');
 const minimatch = require('minimatch');
 
-const DOCS_DIR = join(__dirname, '..', 'docs');
-const BACKUP_DIR = join(__dirname, '..', '.backups');
+const DOCS_DIR = path.join(__dirname, '..', 'docs');
+const BACKUP_DIR = path.join(__dirname, '..', '.backups');
 const PREFIX_PATTERNS = {
   'architecture-': ['ARCHITECTURE.md', 'STRUCTURE.md'],
   'adr-': 'ADR-*.md',
   'branding-': 'Nebula-Singularity-*.md'
 };
 
-function isKebabCase(str: string): boolean {
+function isKebabCase(str) {
   return /^[a-z0-9]+(-[a-z0-9]+)*$/.test(str);
 }
 
-function validatePrefix(filename: string): boolean {
+function validatePrefix(filename) {
   return Object.entries(PREFIX_PATTERNS).some(([prefix, pattern]) => 
     minimatch(filename, typeof pattern === 'string' ? pattern : `{${pattern.join(',')}}`)
   );
 }
 
-async function findRenamableFiles(): Promise<string[]> {
-  const files = await glob(join(DOCS_DIR, '**/*.md'));
+async function findRenamableFiles() {
+  const files = await glob(path.join(DOCS_DIR, '**/*.md'));
   return files.filter(file => {
-    const { name } = parse(file);
-    return !isKebabCase(name) || !validatePrefix(basename(file));
+    const { name } = path.parse(file);
+    return !isKebabCase(name) || !validatePrefix(path.basename(file));
   });
 }
 
 async function updateReferences(oldPath: string, newPath: string) {
-  const archFiles = [join('ARCHITECTURE.md'), join('STRUCTURE.md')];
+  const archFiles = [path.join(__dirname, '..', 'ARCHITECTURE.md'), path.join(__dirname, '..', 'STRUCTURE.md')];
   
   await Promise.all(archFiles.map(async (file) => {
-    const content = await readFile(file, 'utf8');
+    const content = await fs.readFile(file, 'utf8');
     const updated = content.replace(new RegExp(oldPath, 'g'), newPath);
-    if (content !== updated) await writeFile(file, updated);
+    if (content !== updated) await fs.writeFile(file, updated);
   }));
 }
 
@@ -63,13 +63,13 @@ async function main() {
     if (!confirm) return;
 
     await Promise.all(filesToRename.map(async (oldPath) => {
-      const parsed = parse(oldPath);
+      const parsed = path.parse(oldPath);
       const newName = parsed.name
         .replace(/([a-z0-9])([A-Z])/g, '$1-$2')
         .toLowerCase();
-      const newPath = join(parsed.dir, `${newName}${parsed.ext}`);
+      const newPath = path.join(parsed.dir, `${newName}${parsed.ext}`);
 
-      await rename(oldPath, newPath);
+      await fs.rename(oldPath, newPath);
       await updateReferences(oldPath, newPath);
       console.log(`Renamed: ${oldPath} → ${newPath}`);
     }));
